@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- reference: https://www.youtube.com/watch?v=uJC8A_7VZOA -->
+<head>
+    <meta charset="UTF-8">
+    <title>Chat App</title>
+</head>
+<body>
+    <h1>Welcome to the Chat App!</h1>
+
+    <p>Enter new chatroom ID to create a chatroom.</p>
+    <p>Or enter one of these IDs to join an existing chatroom: <b>{{ chatrooms }}</b></p>
+
+    <form action="/chatroom">
+        <label>Enter username:</label><br>
+        <input type="text" name="username"><br><br>
+        <label>Enter chatroom ID:</label><br>
+        <input type="text" name="chatroom"><br><br>
+        <button type="submit">Submit</button>
+    </form>
+
+</body>
+</html>

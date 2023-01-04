@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- reference: https://www.youtube.com/watch?v=uJC8A_7VZOA -->
+<head>
+    <meta charset="UTF-8">
+    <title>Chat App</title>
+</head>
+<body>
+    <h1>Welcome to chatroom {{ chatroom }}</h1>
+
+    <p><u>Current users of chatroom {{ chatroom }}:</u></p>
+    <div id="users" style="border-style: double; padding: 5px; border-color:darkblue"></div>
+    <br>
+    <div id="messages" style="border-style: double; padding: 5px; border-color:darkblue"></div>
+    <br>
+    <form id="send_message_form">
+        <label> <b>{{ username }}</b> </label>
+        <input type="text" id="message_text" placeholder="Enter message...">
+        <button type="submit">Send</button>
+    </form>
+    <br>
+    <form action="/" id="leave_chatroom_form">
+        <button type="submit">Leave chatroom {{ chatroom }}</button>
+    </form>
+
+
+</body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.0/socket.io.js"></script>
+    <script>
+        const socket = io.connect("http://127.0.0.1:5000");   // create a socket connection to the server at this IP address and port number
+
+        socket.on("connect", function() {     // when the socket connects
+            socket.emit("join_chatroom", {    // call join chatroom event from server and pass username and chatroom
+                username: "{{ username }}",
+                chatroom: "{{ chatroom }}",
+            })
+
+            let message_text = document.getElementById("message_text");   // get text entered by user for sending message
+
+            document.getElementById("send_message_form").onsubmit = function (event) {   // when the form for sending a message is submitted
+                event.preventDefault();                    // prevent form from creating a get request
+                let message = message_text.value.trim();   // remove whitespace from start and end of message
+                if (message.length > 0) {                  // if the message is not empty
+                    socket.emit("send_message", {          // call send message event from server and pass username, chatroom and the message
+                        username: "{{ username }}",
+                        chatroom: "{{ chatroom }}",
+                        message: message
+                    })
+                }
+                message_text.value = "";   // clear message
+                message_text.focus();      // bring the pointer back to the message form
+            }
+
+            document.getElementById("leave_chatroom_form").onsubmit = function () {   // when the form for leaving a chatroom is submitted (when the leave chatroom button is pressed)
+                socket.emit("leave_chatroom", {    // call leave chatroom event from server and pass username and chatroom
+                    username: "{{ username }}",
+                    chatroom: "{{ chatroom }}",
+                })
+            }
+         });
+
+        socket.on("receive_message", function(data) {   // when the server calls the receive message event
+            console.log(data);
+            const messageText = document.createElement("div");                         // create a HTML div element
+            messageText.innerHTML = `<b>${data.username}:&nbsp;</b>${data.message}`;   // add the username and message to the div element
+            document.getElementById("messages").appendChild(messageText);              // add the new div element to the messages div element
+        });
+
+        socket.on("joined_chatroom_announcement", function(data) {   // when the server calls the joined chatroom announcement event
+            console.log(data);
+            const userJoined = document.createElement("div");                           // create a HTML div element
+            userJoined.innerHTML = `<b>${data.username}</b> has joined the chatroom`;   // add the username and joined message to the div element
+            document.getElementById("messages").appendChild(userJoined);                // add the new div element to the messages div element
+        });
+
+        socket.on("show_users", function(clients) {   // when the server calls the show users event
+            console.log(clients);
+            document.getElementById("users").innerHTML = "";   // clear the users
+            for (const c of clients) {                         // for each client (user) of the chatroom
+                const user = document.createElement("div");    // create a HTML div element
+                user.innerHTML = c;                            // add the client (user) to the element
+                document.getElementById("users").appendChild(user);   // add the new div element to the users div element
+            }
+        });
+
+        socket.on("left_chatroom_announcement", function(data) {   // when the server calls the left chatroom announcement event
+            console.log(data);
+            const userLeft = document.createElement("div");                         // create a HTML div element
+            userLeft.innerHTML = `<b>${data.username}</b> has left the chatroom`;   // add the username and left message to the div element
+            document.getElementById("messages").appendChild(userLeft);              // add the new div element to the messages div element
+        });
+
+    </script>
+</html>
